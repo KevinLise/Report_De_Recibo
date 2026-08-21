@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+<HEAD
 <p align="center">
   <img src="docs/screenshots/banner.png" alt="Cuadre IQ" width="100%" />
 </p>
@@ -63,4 +63,4 @@ vite 6 · react 19 · fastapi · ollama `qwen3.5:0.8b` · rapidocr · pymupdf
 [`docs/API.md`](docs/API.md)
 =======
 # Report_De_Recibo
->>>>>>> f19bdffc148fc4cd45af5d08024db51220e13ecd
+>f19bdffc148fc4cd45af5d08024db51220e13ecd
