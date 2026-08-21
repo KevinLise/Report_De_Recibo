@@ -1,0 +1,2 @@
+Manual del asistente: los archivos canónicos están en rag/knowledge/*.txt
+Este archivo queda como índice. reindex() lee la carpeta.

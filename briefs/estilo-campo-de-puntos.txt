@@ -1,0 +1,299 @@
+CUADREIQ — FRONTEND
+===================
+Brief para Impeccable / Grok. Este archivo manda.
+Producto: cola de revision de facturas y comprobantes.
+Superficie: Operate. Atmosfera: Experience. Nunca Persuade.
+
+Nombre de trabajo: CUADREIQ (se puede renombrar; el look no).
+Idioma UI: es.
+Canonica: /home/canela/PROYECTOS-AI/CUADREIQ/briefs/estilo-campo-de-puntos.txt
+La skill /campo-de-puntos y /impeccable leen este archivo.
+Si el usuario dice "campo de puntos" o "CUADREIQ", ESTE brief gana.
+
+
+0. Por que no clonamos FeedbackIQ tal cual
+------------------------------------------
+FeedbackIQ es un SPA vanilla: un formulario, un POST /analyze,
+numeros grandes, Chart.js. Una pantalla, poco estado.
+
+Esto es un instrumento de revision: cola, documento seleccionado,
+campos editables, poll de jobs, preview PDF/foto, teclado para
+aprobar/rechazar. Ese estado en JS suelto se pudre.
+
+Cambio de herramientas (permitido, deliberado):
+
+  FeedbackIQ              Este frontend
+  --------------------    --------------------------------
+  Vite + JS vanilla       Vite + React 19 + TypeScript
+  hash router casero      react-router (hash). Rutas: / y /doc/:id
+  Chart.js                no. Cero graficas en el MVP
+  css/tokens.css          se mantiene la idea: tokens + CSS, no Tailwind
+  sin viewer              pdfjs-dist + <img> para foto
+
+NO usar:
+  Next.js (no hay SSR ni SEO)
+  shadcn / Radix theme / Tailwind como design system
+    (el default de esas libs ES el dashboard que odiamos)
+  Mantine / Ant / Material
+  particles.js / tsParticles
+
+SI usar:
+  vite ^6
+  react + react-dom + typescript
+  react-router-dom (createHashRouter)
+  pdfjs-dist (solo el canvas del PDF, sin toolbar de Mozilla)
+  fetch nativo via /api (proxy Vite -> FastAPI, igual que FIQ)
+
+Proxy (vite.config.ts), mismo truco que FeedbackIQ:
+
+  server.port = 5173
+  server.proxy['/api'] = { target: 'http://127.0.0.1:4005', changeOrigin: true }
+
+Puerto backend 4005 (4004 lo usa FeedbackIQ). No chocar.
+
+
+1. Tesis visual
+---------------
+La factura es el objeto. El campo es el aire. La UI no es un marco.
+
+Firma unica: canvas de punticos casi invisibles + onda que se
+expande y se diluye SOLO en eventos reales (archivo nuevo, etapa
+del pipeline, validacion que falla, pasa a revision).
+
+Todo lo demas quieto.
+
+Origen: pagina de punticos + canvas del agente de imagenes de Grok.
+No Linear. No Vercel. No "AI invoice SaaS".
+
+
+2. Estructura de carpetas (cuando el repo exista)
+-------------------------------------------------
+frontend/
+  index.html
+  package.json
+  tsconfig.json
+  vite.config.ts
+  public/
+  src/
+    main.tsx
+    App.tsx
+    api/
+      client.ts          # unico lugar que habla con /api
+      types.ts           # Document, Field, Job, Engine, QueueItem
+    field/
+      Field.tsx          # canvas de puntos. pointer-events: none
+      field.css
+    screens/
+      Review.tsx         # la pantalla. no hay dashboard
+    components/
+      Queue.tsx          # film de cola
+      Paper.tsx          # PDF o foto flotando
+      Inspector.tsx      # label | valor
+      Actions.tsx        # aprobar / rechazar
+      Report.tsx         # texto de Gemini o de reglas
+      UsageLine.tsx      # tokens de ESTA peticion (mono, ink-dim)
+      PipelineDots.tsx   # extract | reglas | gemini | humano
+      ChatDock.tsx       # asistente local, tipo Grok, no modal
+    hooks/
+      useEngine.ts
+      useQueue.ts
+      useDocument.ts
+      useJob.ts
+      useChat.ts
+    styles/
+      tokens.css
+      base.css
+      app.css
+    mocks/
+      queue.json         # para disenar SIN backend
+
+Una sola pantalla canonica. No /login, no /settings, no /analytics.
+Empty state = Review sin seleccion.
+
+
+3. Layout (anti-dashboard)
+--------------------------
+PROHIBIDO: navbar + sidebar + KPI cards + tabla admin.
+
+  +------------------------------------------------------+
+  | campo (canvas fijo, detras, aria-hidden)             |
+  |                                                      |
+  |   [cola film]     [PAPEL]      [inspector]           |
+  |    160-200px       flex         280-340px            |
+  |                    flotante     campos + reporte     |
+  |                                 usage tokens         |
+  |                                                      |
+  |              [  rechazar  |  aprobar  ]              |
+  |  [ chat dock — esquina, no tapa el papel ]           |
+  +------------------------------------------------------+
+
+VIDEO DE FONDO: no. Rompe el instrumento, pelea con los
+puntos y es slop. El campo ES el fondo.
+
+- Cola: borde izquierdo. No sidebar de 240 con logo. Item =
+  proveedor, numero, total (mono), un mark si hay que revisar.
+  Activo = ink. Resto = ink-dim. Cero pills de color.
+- Papel: el PDF/foto flota. Fondo paper #E7E2D6. Sin card,
+  sin radius 16, sin shadow suave + border.
+- Inspector: tipografia. Separacion por espacio. Inputs =
+  linea inferior, fondo transparente, mono en montos/NIT.
+- Acciones: una fila abajo. No toolbar de iconos. No modal.
+  La revision ES la pagina.
+
+< 960px: papel arriba (alto fijo), inspector debajo, cola
+en sheet inferior. No hamburger.
+
+
+4. Que pinta cada pieza (datos)
+-------------------------------
+QueueItem
+  id, filename, supplier, number, total, status,
+  confidence, created_at
+  status: queued | running | needs_review | approved | rejected | error
+
+Document (GET /api/documents/:id)
+  id, filename, mime, file_url
+  status, stage            # extract | rules | gemini | human
+  fields: Field[]
+  items: LineItem[]
+  validations: Validation[]   # formula, ok, message
+  report: string
+  confidence: number
+  source: "pymupdf" | "rapidocr" | "gemini"
+  usage: { tokens_est, tokens_in, tokens_out, tokens_total,
+           model, cache_hit }
+
+Field
+  key, label, value, confidence, edited: bool
+  keys fijos: supplier, nit, number, date, due_date,
+              subtotal, tax, discount, total
+
+Validation
+  id, ok, formula, message
+  ej. "sum(items) == subtotal"
+
+El frontend NO inventa campos. Si el backend manda extra, se
+listan. Si falta uno del schema, se muestra vacio + signal.
+
+
+5. api/client.ts (contrato, no inventar rutas)
+----------------------------------------------
+GET    /api/health
+GET    /api/engine              # pymupdf, paddle, gemini_ok, inbox
+POST   /api/documents           # multipart files[]  -> 200 o 202+job
+GET    /api/jobs/:id            # queued|running|done|error
+GET    /api/queue               # ?status=needs_review
+GET    /api/documents/:id
+PATCH  /api/documents/:id       # { fields: { nit: "..." } }
+POST   /api/documents/:id/approve
+POST   /api/documents/:id/reject
+GET    /api/documents/:id/file
+GET    /api/usage               # totales del dia
+POST   /api/chat                # { message, document_id? }
+POST   /api/chat/email          # { document_id, to }
+
+Igual que FeedbackIQ:
+- 202 => poll /api/jobs/:id cada 1.5s hasta done|error
+- errores: res.json().detail (string) como FIQ
+- timeout 120s en sync; poll max 30 min
+- mocks/ si /api/health falla: disenar igual
+
+Nunca llamar a Gemini ni a Ollama desde el browser.
+Chat y email salen por /api/chat*. El frontend no habla con n8n.
+Nunca Spreadsheet.
+
+
+6. Campo de puntos
+------------------
+canvas 2D, capa fija, z-index atras, pointer-events: none.
+No particles.js. No grid CSS.
+
+Puntos: 1.0-1.6 px, densidad baja, ink a 6-12% opacidad,
+distribucion irregular. Drift opcional 1 ciclo / 40s+.
+
+Ondas (max 1-2):
+  archivo nuevo | stage cambia | validation.ok === false | needs_review
+Anillo 0.5-1 px, 1.4-2.6s, cubic-bezier(0.16, 1, 0.3, 1).
+Se diluyen. Cero bounce/elastic.
+
+prefers-reduced-motion: puntos estaticos, cero ondas.
+Puntos NUNCA sobre texto, numeros ni el papel.
+Papel e inspector: velo void-2 al 92-96%.
+
+
+7. Tokens (tokens.css)
+----------------------
+--void       #0B0C10
+--void-2     #12141A
+--ink        #D8D6D0
+--ink-dim    #8B8A84
+--rule       #2A2C33
+--phosphor   #C9D0C4
+--signal     #C4A574
+--fault      #C45C4A
+--pass       #7A8F72
+--paper      #E7E2D6
+
+--font-ui    "IBM Plex Sans", sans-serif
+--font-data  "IBM Plex Mono", ui-monospace, monospace
+--fs-12 12px / --fs-14 14px / --fs-18 18px / --fs-28 28px
+--radius 0   (o 2px. nunca 16)
+
+Prohibido: Inter, Geist, Space Grotesk, Instrument Serif,
+gradiente violeta/cyan, glow, glass, cream #F4F1EA + serif,
+#000 en lectura, KPI cards, bento, icon-tile, side-tab,
+eyebrow ALL CAPS de landing, gradient text.
+
+
+8. Type y copy
+--------------
+UI: Plex Sans 13-15, sentence case.
+Datos: Plex Mono, tabular-nums, montos alineados por decimal.
+Peso 400; total 500. No 700.
+
+- "12 en cola"        no "You have 12 invoices awaiting review"
+- "No cuadra"         no "Oops, something went wrong"
+- "Falta NIT"         no "Please provide a valid tax ID"
+- empty: "Nada en cola." + como subir (inbox o drop). Nada mas.
+- etapas: "PyMuPDF" | "RapidOCR" | "reglas" | "Gemini" | "humano"
+- usage: "812 in · 146 out" en Plex Mono 12. Si cache_hit: "cache".
+  No un panel de analytics.
+
+Un label = un trabajo. Report.tsx es un parrafo.
+ChatDock es el unico chat. No es Report.
+
+
+9. Interaccion
+--------------
+Click cola -> GET document + file.
+Campos: click, editar, PATCH al blur o Enter.
+Baja confianza: valor en --signal, no badge.
+Validation false: cifra en --fault + formula en mono.
+Aprobar / R: POST approve. Rechazar / Shift+R.
+Drop de archivos en el campo: POST /api/documents.
+Poll del job: PipelineDots avanza; una onda por stage.
+
+Carga: no skeleton-cards. Papel vacio + etapa en mono 12 ink-dim.
+Approve flash --pass 400ms en el total, luego siguiente de la cola.
+
+ChatDock (asistente, look Grok):
+- Esquina inferior, void-2, sin glass, sin bubble iOS.
+- Input linea inferior. Mensajes: ink / ink-dim, Plex Sans 14.
+- Habla de la app (RAG). Si pide "manda el pdf", pide el correo
+  y POST /api/chat/email con el document_id activo.
+- Una onda en el campo cuando llega respuesta o cuando sale el mail.
+- Si Ollama esta down: una linea "asistente apagado". No inventar.
+
+
+10. Como construir (Impeccable)
+-------------------------------
+1. /impeccable init  superficie = product / Operate
+2. DESIGN.md cita ESTE archivo. Tokens de la seccion 7.
+3. /impeccable shape Review
+4. Build UNA pantalla con mocks/ primero
+5. Enchufar api/client.ts cuando /api/health responda
+6. /impeccable audit + critique + quieter
+   (si el campo se volvio espectaculo, quieter)
+7. npx impeccable detect frontend/src
+
+No Stitch. No "make it polished". No dashboard "para despues".

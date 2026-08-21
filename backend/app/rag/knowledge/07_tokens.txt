@@ -1,0 +1,11 @@
+Tokens
+
+El modo default es local: PyMuPDF + RapidOCR + Ollama. 0 tokens de API.
+
+Si alguien prende GEMINI_ENABLED, debajo del reporte puede aparecer "812 in · 146 out".
+Eso es Gemini en ESA factura, no un total del mes.
+PDF digital (pymupdf) muestra 0.
+cache = el sha256 ya existía.
+
+El chat corre en Ollama local (qwen3.5:0.8b) con RAG del manual.
+Gemini chat solo existe como hueco: GEMINI_ENABLED=true.

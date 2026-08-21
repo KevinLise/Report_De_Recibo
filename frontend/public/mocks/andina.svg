@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="595" height="842" viewBox="0 0 595 842" role="img" aria-label="Factura Comercial Andina">
+  <rect width="595" height="842" fill="#E7E2D6"/>
+  <text x="48" y="64" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="11" fill="#5c5a54">factura electrónica de venta</text>
+  <text x="48" y="92" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="20" fill="#1c1b18">Comercial Andina S.A.S.</text>
+  <text x="48" y="114" font-family="IBM Plex Mono, ui-monospace, monospace" font-size="11" fill="#3a3934">NIT 900.123.456-8 · Bogotá D.C.</text>
+  <text x="400" y="88" font-family="IBM Plex Mono, ui-monospace, monospace" font-size="13" fill="#1c1b18" text-anchor="end">FV-10482</text>
+  <text x="547" y="88" font-family="IBM Plex Mono, ui-monospace, monospace" font-size="13" fill="#1c1b18"> </text>
+  <text x="400" y="108" font-family="IBM Plex Mono, ui-monospace, monospace" font-size="11" fill="#5c5a54" text-anchor="end">12 ago 2026</text>
+  <line x1="48" y1="136" x2="547" y2="136" stroke="#1c1b18" stroke-width="0.6"/>
+  <text x="48" y="162" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="11" fill="#5c5a54">adquiriente</text>
+  <text x="48" y="180" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="13" fill="#1c1b18">CUADREIQ · operador local</text>
+  <text x="48" y="198" font-family="IBM Plex Mono, ui-monospace, monospace" font-size="11" fill="#3a3934">vence 11 sep 2026</text>
+
+  <text x="48" y="240" font-family="IBM Plex Mono, ui-monospace, monospace" font-size="10" fill="#5c5a54">cant</text>
+  <text x="90" y="240" font-family="IBM Plex Mono, ui-monospace, monospace" font-size="10" fill="#5c5a54">descripción</text>
+  <text x="547" y="240" font-family="IBM Plex Mono, ui-monospace, monospace" font-size="10" fill="#5c5a54" text-anchor="end">neto</text>
+  <line x1="48" y1="248" x2="547" y2="248" stroke="#b7b2a6" stroke-width="0.5"/>
+
+  <text x="48" y="274" font-family="IBM Plex Mono, ui-monospace, monospace" font-size="12" fill="#1c1b18">10</text>
+  <text x="90" y="274" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="13" fill="#1c1b18">Resma carta 80 g</text>
+  <text x="547" y="274" font-family="IBM Plex Mono, ui-monospace, monospace" font-size="12" fill="#1c1b18" text-anchor="end">1.200.000</text>
+
+  <text x="48" y="300" font-family="IBM Plex Mono, ui-monospace, monospace" font-size="12" fill="#1c1b18">4</text>
+  <text x="90" y="300" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="13" fill="#1c1b18">Toner 85A</text>
+  <text x="547" y="300" font-family="IBM Plex Mono, ui-monospace, monospace" font-size="12" fill="#1c1b18" text-anchor="end">2.400.000</text>
+
+  <text x="48" y="326" font-family="IBM Plex Mono, ui-monospace, monospace" font-size="12" fill="#1c1b18">1</text>
+  <text x="90" y="326" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="13" fill="#1c1b18">Servicio de corte</text>
+  <text x="547" y="326" font-family="IBM Plex Mono, ui-monospace, monospace" font-size="12" fill="#1c1b18" text-anchor="end">450.000</text>
+
+  <line x1="320" y1="380" x2="547" y2="380" stroke="#b7b2a6" stroke-width="0.5"/>
+  <text x="320" y="404" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12" fill="#5c5a54">subtotal</text>
+  <text x="547" y="404" font-family="IBM Plex Mono, ui-monospace, monospace" font-size="12" fill="#1c1b18" text-anchor="end">4.050.000</text>
+  <text x="320" y="426" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="12" fill="#5c5a54">IVA 19 %</text>
+  <text x="547" y="426" font-family="IBM Plex Mono, ui-monospace, monospace" font-size="12" fill="#1c1b18" text-anchor="end">770.000</text>
+  <text x="320" y="456" font-family="IBM Plex Sans, Helvetica, sans-serif" font-size="14" fill="#1c1b18">total</text>
+  <text x="547" y="456" font-family="IBM Plex Mono, ui-monospace, monospace" font-size="16" fill="#1c1b18" text-anchor="end">4.820.000</text>
+
+  <text x="48" y="780" font-family="IBM Plex Mono, ui-monospace, monospace" font-size="9" fill="#8a877e">CUFE mock · no es un documento DIAN · sintético</text>
+</svg>

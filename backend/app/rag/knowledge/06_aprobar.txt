@@ -1,0 +1,9 @@
+Aprobar y rechazar. Cómo apruebo. Cómo se aprueba una factura.
+
+Aprobar = tecla R, o el botón de abajo.
+Rechazar = Shift+R, o el botón de abajo.
+
+Aprobar no recalcula totales ni llama a Gemini. Confirma los campos que están en pantalla.
+Rechazar saca el documento de la cola viva.
+
+AUTO_APPROVE_DIGITAL está apagado por defecto: un PDF digital que cierra igual queda en needs_review para que el operador lo mire.

@@ -1,0 +1,51 @@
+CUADREIQ — manual del asistente (RAG)
+=====================================
+Copiar a backend/app/rag/knowledge.txt al crear el repo.
+El chat local SOLO responde con esto + el documento abierto.
+
+Que es
+------
+CUADREIQ extrae, valida y deja revisar facturas y comprobantes.
+La plata la cuadra Python, no la IA.
+
+Como entra un archivo
+---------------------
+- Arrastra al campo o deja el PDF/foto en la carpeta inbox.
+- PDF con texto: PyMuPDF, sin Gemini, 0 tokens.
+- Foto o PDF escaneado: Gemini ve una pagina chica y devuelve JSON.
+- Si Gemini no responde: RapidOCR, y queda para revision humana.
+
+Cola
+----
+Izquierda. Click = abrir. Activo claro, resto apagado.
+needs_review = hay que mirarlo. approved / rejected salen de la cola viva.
+
+Inspector
+---------
+Campos editables. Enter o blur guarda.
+Amarillo (signal) = baja confianza. Rojo (fault) = no cuadra.
+La formula aparece en mono (ej. sum items != subtotal).
+No cambies un total a ojo si la formula esta roja: corrige el item.
+
+Aprobar / rechazar
+------------------
+Aprobar = R. Rechazar = Shift+R. O los botones de abajo.
+Aprobar no recalcula. Confirma lo que ves.
+
+Tokens
+------
+Debajo del reporte: "812 in · 146 out".
+Eso es Gemini en ESA factura. cache = no se cobro de nuevo.
+PDF digital muestra 0.
+
+Correo
+------
+Si pides "manda esta factura por correo", el asistente pide
+la direccion y el backend se la pasa a n8n con el PDF original
+ya guardado. No se genera un PDF nuevo. Solo documentos que
+ya se procesaron (needs_review o approved).
+
+Lo que el asistente no hace
+---------------------------
+No extrae facturas. No cambia montos. No llama a Gemini.
+No inventa proveedores. Si no esta en este manual, dice que no sabe.

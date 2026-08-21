@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+python-multipart
+pydantic
+pydantic-settings
+httpx
+pymupdf
+pymupdf4llm
+pillow
+google-genai
+rapidocr-onnxruntime
+python-dotenv
+pytest

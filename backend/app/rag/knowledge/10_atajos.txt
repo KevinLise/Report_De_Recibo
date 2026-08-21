@@ -1,0 +1,15 @@
+Atajos y piezas de la UI
+
+Teclado en revisión
+- R = aprobar
+- Shift+R = rechazar
+
+Botón "asistente" abajo: abre /asistente. Si hay factura abierta, lleva ?doc=ID y el chat habla de esa factura.
+Botón "revisión" en el asistente: vuelve al papel.
+
+Vidrio
+Los paneles (cola, inspector, composer, burbujas del chat) son glass: blur sobre el fondo.
+El fondo es un video o imagen (public/bg.mp4 y public/bg.jpg) con una grilla de puntos y un velo. Si cambias el wallpaper, los puntos y el blur se quedan.
+El papel de la factura no es glass: es opaco a propósito.
+
+Idioma de la UI: español, sentence case.

@@ -1,0 +1,14 @@
+{
+  "name": "cuadre-iq",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "concurrently -n ollama,backend,frontend -c magenta,yellow,cyan \"npm run dev:ollama\" \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:ollama": "bash scripts/ensure-ollama.sh",
+    "dev:backend": "cd backend && .venv/bin/python run.py",
+    "dev:frontend": "cd frontend && npm run dev"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}

@@ -1,0 +1,13 @@
+Cola de revisión
+
+Está a la izquierda. Click = abrir. El activo se ve claro, el resto apagado.
+Estados vivos en cola: queued, running, needs_review, error.
+approved y rejected salen de la cola viva.
+
+needs_review = hay que mirarlo. Ahí está el trabajo.
+queued / running = todavía se extrae. No abras para editar hasta que pase a needs_review.
+error = falló la extracción. Revisa el archivo o vuelve a subir.
+
+En el teléfono la cola se pliega abajo en una hoja. El botón de abrir archivo aparece en el vacío si no hay nada, o junto a las acciones si ya hay cola.
+
+El papel del centro es el PDF o la foto original. Es un objeto opaco, no vidrio.

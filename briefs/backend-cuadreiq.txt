@@ -1,0 +1,323 @@
+CUADREIQ — BACKEND (CERRADO)
+============================
+Contrato final. FastAPI, mismo idioma que FeedbackIQ.
+Frontend solo consume este contrato.
+Puerto 4005. Raiz: /home/canela/PROYECTOS-AI/CUADREIQ/
+
+Este archivo es la receta “rebuscada” del proyecto
+(el CTranslate2 de FeedbackIQ, pero para documentos).
+
+
+0. Decisiones cerradas
+----------------------
+- REST FIQ. n8n = satelite (email). Sheets no es DB.
+- PDF digital     -> pymupdf4llm + reglas. Gemini = 0
+- foto / scan     -> Gemini Flash-Lite, UNA pagina renderizada chica
+- Gemini 429/caido -> RapidOCR (ONNX). No Ollama vision
+- Gemini propone JSON. validate.py JUZga la plata
+- Conteo de tokens Gemini REAL (count_tokens + usage), no tiktoken
+- Chat: Ollama qwen3.5:0.8b + RAG del knowledge.txt
+- Email del chat: backend detecta intent -> n8n adjunta el PDF ya procesado
+- SQLite. Un operador local. Sin Celery.
+
+
+1. Stack rebuscado (por que, no “otra lib mas”)
+-----------------------------------------------
+FeedbackIQ gano con CTranslate2 int8 + LRU, no con un API de traduccion.
+Aca el equivalente, cosas que el resto no pone:
+
+  pymupdf4llm
+    Mismo motor que PyMuPDF, sale Markdown con titulos/tablas.
+    Companeros hacen fitz.get_text() y se come el layout.
+    Si el markdown trae NIT + total + items y las reglas cierran:
+    no se llama Gemini. Eso es el ahorro gordo.
+
+  Pillow resize lado largo = 768
+    Gemini: imagen <=384px en AMBOS lados = 258 tokens.
+    Mas grande = tiles 768x768 x 258 tokens c/u.
+    Renderizar la pagina 1 a PNG ~768px es el int8 de este proyecto.
+    Nunca mandar el PDF nativo de 8 paginas.
+
+  google-genai
+    SDK oficial. response_schema = InvoiceDraft (Pydantic).
+    Cero reintentos por JSON roto. Cookbook de Google es
+    exactamente “PDF invoices + structured outputs”.
+
+  count_tokens (API) + usage (respuesta)
+    Analogia exacta de tokenizer.py de FIQ.
+    tiktoken o200k_base NO sirve: vocabulario de OpenAI, no de Gemini.
+    Antes: client.models.count_tokens(model, contents=[prompt, image])
+    Despues: response.usage_metadata
+      prompt_token_count / candidates_token_count
+    Guardar los dos. Mostrar por peticion.
+
+  Hash sha256 del archivo
+    Misma factura = no se vuelve a pagar Gemini.
+    Como el LRU de traduccion en FIQ.
+
+  RapidOCR (ONNX)
+    Fallback sin instalar PaddlePaddle (el infierno de deploy).
+    CPU, liviano. Si la tabla sale vacia -> cola humana.
+    No es el primer ojo. No se “verifica” con Gemini encima
+    (eso duplica y no ahorra: la imagen se paga igual).
+
+  nomic-embed-text (ya lo tenes en Ollama)
+    RAG del asistente. No LangChain. sqlite + chunks.
+
+  qwen3.5:0.8b
+    El modelo mas chico que ya bajaste. Solo chat, nunca vision.
+
+
+2. Arbol
+--------
+backend/
+  run.py
+  requirements.txt
+  .env / .env.example
+  app/
+    __init__.py
+    main.py
+    config.py
+    api/routes.py
+    api/schemas.py
+    core/
+      pipeline.py
+      pdf_digital.py      # pymupdf4llm + fitz render
+      ocr.py              # RapidOCR
+      gemini.py
+      tokenizer.py        # conteo Gemini + estimacion local
+      validate.py
+      confidence.py
+      jobs.py
+      store.py
+      export.py
+      report_service.py   # n8n
+    rag/
+      knowledge.txt       # manual de la app (fuente del RAG)
+      chunker.py          # 500 chars, overlap 80
+      embed.py            # ollama /api/embed nomic-embed-text
+      retrieve.py
+      chat.py             # ollama generate + intent
+    domains/invoice.py
+inbox/
+data/                     # app.db, originals/, rag.sqlite
+samples/
+docs/API.md
+
+
+3. config.py
+------------
+PORT=4005
+CORS_ORIGIN=http://localhost:5173
+INBOX_DIR=../inbox
+DATA_DIR=../data
+DB_PATH=../data/app.db
+MAX_UPLOAD_MB=40
+AUTO_APPROVE_DIGITAL=false
+GEMINI_MAX_PAGES=1
+GEMINI_LONG_EDGE_PX=768
+
+GEMINI_API_KEY=
+GEMINI_MODEL=gemini-3.5-flash-lite
+GEMINI_TIMEOUT_SEC=45
+GEMINI_ENABLED=true
+
+OLLAMA_HOST=http://127.0.0.1:11434
+OLLAMA_CHAT_MODEL=qwen3.5:0.8b
+OLLAMA_EMBED_MODEL=nomic-embed-text
+RAG_CHUNK=500
+RAG_OVERLAP=80
+RAG_TOP_K=3
+
+N8N_WEBHOOK_URL=
+N8N_WEBHOOK_SECRET=
+N8N_WEBHOOK_HEADER_NAME=X-CuadreIQ-Secret
+
+Boot: si falta key o Ollama, engine lo dice. No crash.
+
+
+4. Pipeline
+-----------
+1. sha256 del bytes. Si existe en DB, devolver ese document (0 tokens).
+2. Guardar data/originals/{id}
+3. Clasificar:
+     PDF y pymupdf4llm da texto util
+       y extract_fields_heuristic encuentra las keys
+       y validate cierra
+         -> source=pymupdf, tokens_in=0, tokens_out=0
+     si no (foto, scan, texto incompleto):
+         render pagina 1 @ 768px (fitz + Pillow)
+         tokenizer.estimate_image(w,h)
+         tokenizer.count_gemini(prompt, png)   # ANTES
+         gemini.extract(png) -> InvoiceDraft + report
+         tokenizer.from_usage(response)        # DESPUES
+         source=gemini
+     GeminiUnavailable:
+         RapidOCR -> draft + report de reglas
+         source=rapidocr, tokens=0
+4. validate.run  (siempre)
+5. confidence.score
+6. status: Gemini/RapidOCR -> needs_review
+   digital + reglas ok + AUTO_APPROVE_DIGITAL -> approved
+7. store: draft + usage + hash
+8. job.done
+
+Gemini no pisa totales. validate marca fault.
+
+
+5. tokenizer.py  (el de FIQ, pero Gemini)
+-----------------------------------------
+TILE = 258
+
+def estimate_image_tokens(w, h) -> int:
+    if w <= 384 and h <= 384:
+        return 258
+    tiles_x = ceil(w / 768)
+    tiles_y = ceil(h / 768)
+    return tiles_x * tiles_y * 258
+
+def count_gemini(model, prompt, image_bytes|None) -> int:
+    # google.genai Client.models.count_tokens
+    # input only. llamar SIEMPRE antes de generate
+
+def from_usage(resp) -> {tokens_in, tokens_out, tokens_total}:
+    # usage_metadata de generate_content
+
+Persistir en documents:
+  tokens_est, tokens_in, tokens_out, tokens_total,
+  gemini_model, cache_hit
+
+GET /api/usage
+  { today: {calls, tokens_in, tokens_out}, last: [...] }
+
+El frontend muestra por documento (inspector) y un renglón
+en engine/uso. No es un dashboard de charts.
+
+
+6. gemini.py
+------------
+from google import genai
+client = genai.Client(api_key=settings.GEMINI_API_KEY)
+
+generate_content(
+  model=GEMINI_MODEL,
+  contents=[PROMPT_FIJO, png_part],
+  config=GenerateContentConfig(
+    response_mime_type="application/json",
+    response_schema=InvoiceDraft,   # Pydantic
+  ),
+)
+
+PROMPT_FIJO: 8-12 lineas. Extrae el schema. No prose.
+Una pagina. Una llamada. Sin tools. Sin chat.
+429/5xx/timeout -> GeminiUnavailable.
+
+
+7. validate.py
+--------------
+- sum(items.net) ~= subtotal ±0.01
+- subtotal - discount == taxable
+- taxable * rate ~= tax
+- subtotal + tax - discount == total
+- fechas; due >= issued
+- NIT CO + digito de verificacion (DIAN, modulo 11)
+- unique (nit, number, total)
+- no negativos indebidos
+
+pytest = DoD minimo. Sin IA en este archivo.
+
+
+8. RAG + chat
+-------------
+knowledge.txt = como usar CUADREIQ (cola, aprobar, inbox,
+que significa “no cuadra”, como llega el mail).
+Al boot o /api/rag/reindex:
+  chunker -> embed nomic-embed-text -> tabla rag_chunks
+
+POST /api/chat
+  { message, document_id? }
+  retrieve top_k chunks
+  ollama /api/chat  modelo 0.8b
+    system: sos el asistente de CUADREIQ. solo el manual +
+            el documento si viene id. si piden enviar el pdf
+            por correo, responde JSON:
+            {"action":"email","document_id":"...","to":"..."}
+            si falta to, pregunta el correo.
+  return { text, action?, tokens_local? }
+
+POST /api/chat/email
+  { document_id, to }
+  solo si document.status in (approved, needs_review)
+  report_service -> n8n:
+    { to, subject, filename, path, document_id }
+  n8n: Gmail + attach file. No Gemini. No Ollama.
+
+El modelo NO manda el correo. El backend si, via n8n.
+
+
+9. API
+------
+GET  /health
+GET  /engine
+     { pymupdf4llm, rapidocr, gemini:{configured,ok,model},
+       ollama:{ok, chat, embed}, inbox, db }
+POST /documents            200 | 202
+GET  /jobs/{id}
+GET  /queue?status=
+GET  /documents/{id}       incluye usage
+PATCH /documents/{id}
+POST /documents/{id}/approve
+POST /documents/{id}/reject
+GET  /documents/{id}/file
+GET  /usage
+POST /chat
+POST /chat/email
+POST /rag/reindex
+
+Errores: detail=str (parseError de FIQ).
+
+
+10. store
+---------
+documents(..., sha256 UNIQUE, source, tokens_est, tokens_in,
+          tokens_out, tokens_total, gemini_model, cache_hit)
+fields / items / validations
+rag_chunks(id, text, embedding BLOB)
+usage_events(id, document_id, kind, tokens_in, tokens_out, at)
+  kind: gemini | chat
+
+
+11. requirements.txt
+--------------------
+fastapi
+uvicorn[standard]
+python-multipart
+pydantic
+pydantic-settings
+httpx
+pymupdf
+pymupdf4llm
+pillow
+google-genai
+rapidocr-onnxruntime
+# ollama se habla por HTTP, no hace falta el paquete
+
+
+12. Orden de implementacion
+---------------------------
+1. health + engine
+2. store + documents fixture
+3. pdf_digital + validate + jobs
+4. tokenizer + gemini + usage
+5. rapidocr fallback
+6. queue / patch / approve / reject / file
+7. rag index + /chat
+8. /chat/email + n8n
+9. watchdog inbox (ultimo)
+
+
+13. Fuera
+---------
+LangChain, LlamaIndex, Celery, Postgres MVP, Textract,
+Document AI de pago, VLM local, video, recalcular montos
+con Gemini, mandar PDF “arreglado” por el modelo.

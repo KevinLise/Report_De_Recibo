@@ -1,0 +1,17 @@
+Cómo entra un archivo
+
+Arrastra el PDF o la foto al campo de revisión, o usa el botón de abrir archivo.
+También puedes dejar el archivo en la carpeta inbox del backend: el watchdog lo ingesta solo.
+
+Límite: 40 MB.
+
+Pipeline local
+1. Hash sha256. Si el archivo ya se vio, se devuelve el documento guardado. 0 tokens.
+2. Se guarda el original en data/originals/{id}.
+3. Clasificación:
+   - PDF con texto útil (pymupdf4llm): source=pymupdf, 0 tokens.
+   - Foto, scan o PDF sin texto: RapidOCR (ONNX) en CPU. Queda para revisión humana.
+   - Gemini es opcional. Solo corre si GEMINI_ENABLED=true y hay API key. El producto funciona sin eso.
+
+validate.py juzga si la plata cuadra. El modelo no recalcula totales.
+Imágenes van por job asíncrono (202). PDF digital suele responder 200 con el documento listo.

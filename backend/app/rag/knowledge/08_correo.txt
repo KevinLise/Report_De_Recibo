@@ -1,0 +1,16 @@
+Correo
+
+Puedes pedirme: "manda esta factura por correo", "envíala a ana@empresa.com", "mándame el pdf".
+
+Qué pasa
+1. Tiene que haber un documento abierto (needs_review o approved). Rechazado no se manda.
+2. Necesito la dirección. Si no la diste, pregunto: ¿A qué correo?
+3. El backend llama al webhook de n8n y adjunta el PDF o foto ORIGINAL ya guardado en data/originals. No se genera un PDF nuevo.
+4. Payload a n8n: to, subject (Cuadre IQ · filename), filename, path, document_id.
+
+Si n8n no tiene URL, el envío queda en dry-run: se confirma el destino pero el correo no sale a internet.
+
+Ejemplos que entiendo
+- manda esta factura a contabilidad@acme.co
+- envía el pdf a  juan@correo.com
+- mándala por mail

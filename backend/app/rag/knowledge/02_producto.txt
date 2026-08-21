@@ -1,0 +1,17 @@
+Qué es Cuadre IQ
+
+Cuadre IQ extrae, valida y deja revisar facturas y comprobantes en local.
+Un operador. Sin login. Sin dashboard de KPIs.
+Éxito = un documento cuadra o queda marcado, con los tokens de esa petición a la vista.
+
+Pantallas
+- Revisión: / y /doc/:id. Cola a la izquierda, papel al centro, inspector a la derecha, acciones abajo.
+- Asistente: /asistente. Composer de chat. Si vienes desde una factura, el query es ?doc=ID.
+
+Puertos
+- UI Vite: http://localhost:5173
+- API FastAPI: http://127.0.0.1:4005  (prefijo /api)
+Si la API no responde, el frontend usa mocks. Nunca llama a Gemini, Ollama ni n8n desde el browser.
+
+Nombre de marca: Cuadre IQ.
+La plata la cuadra Python, no la IA.

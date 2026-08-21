@@ -1,0 +1,37 @@
+:root {
+  --void: #0b0c10;
+  --void-2: #12141a;
+  --ink: #f2f0ea;
+  --ink-dim: #8b8a84;
+  --rule: #2a2c33;
+  --phosphor: #f2f0ea;
+  --signal: #c4a574;
+  --fault: #c45c4a;
+  --pass: #7a8f72;
+  --paper: #e7e2d6;
+  --paper-ink: #1c1b18;
+
+  --font-ui: "IBM Plex Sans", sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, monospace;
+  --font-brand: "IBM Plex Sans", sans-serif;
+
+  --fs-12: 12px;
+  --fs-13: 13px;
+  --fs-14: 14px;
+  --fs-15: 15px;
+  --fs-18: 18px;
+  --fs-28: 28px;
+
+  --radius: 2px;
+  --radius-glass: 20px;
+  --glass: rgba(255, 255, 255, 0.06);
+  --glass-strong: rgba(255, 255, 255, 0.08);
+  --glass-edge: rgba(255, 255, 255, 0.14);
+  --glass-shine: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  --glass-blur: 24px;
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+  --veil: color-mix(in srgb, var(--void-2) 94%, transparent);
+
+  --queue-w: 200px;
+  --inspector-w: 320px;
+}

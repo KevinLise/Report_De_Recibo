@@ -1,0 +1,21 @@
+Inspector
+
+A la derecha. Campos editables del schema:
+proveedor, NIT, número, fecha, vence, subtotal, iva, descuento, total.
+Ítems: descripción, cantidad, unidad, neto.
+
+Enter o blur guarda. El backend vuelve a correr validate.py.
+
+Colores
+- Amarillo (signal) = baja confianza. Míralo.
+- Rojo (fault) = la fórmula no cuadra. No cambies un total a ojo: corrige el ítem o el campo que está mal.
+
+Fórmulas
+- sum(items.net) == subtotal
+- tax ~= gravable * 0.19 (IVA Colombia)
+- subtotal + tax - discount == total
+- dígito de verificación del NIT
+- fechas coherentes (vence no antes de fecha)
+
+El reporte debajo del papel es 1-2 frases de cómo se leyó el documento.
+Aprobar no recalcula. Confirma lo que ves.
